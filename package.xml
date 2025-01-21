@@ -1,23 +1,28 @@
 <?xml version="1.0"?>
-<package>
-  <name>ublox_driver</name>
+<package format="2">
+  <name>ublox_driver_ros2</name>
   <version>1.0.0</version>
-  <description>A driver for u-blox receiver (ZED-F9P) with ros support</description>
+  <description>A driver for u-blox receiver with ros2 support</description>
 
-  <maintainer email="shaozu.cao@gmail.com">CAO Shaozu</maintainer>
+  <maintainer email="RenwangHuangX@gmail.com">Renwang-Huang</maintainer>
 
   <license>GPLv3</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <!-- Build tool dependency for ROS 2 -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Build dependencies for ROS 2 -->
   <build_depend>nav_msgs</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>rospy</build_depend>
+  <build_depend>rclcpp</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
   <build_depend>gnss_comm</build_depend>
 
+  <!-- Runtime dependencies for ROS 2 -->
   <run_depend>nav_msgs</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>rospy</run_depend>
+  <run_depend>rclcpp</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
   <run_depend>gnss_comm</run_depend>
+
 </package>

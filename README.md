@@ -1,20 +1,20 @@
-# ublox_driver
+# ublox_driver_ros2
 
-**Authors/Maintainers:** CAO Shaozu (shaozu.cao AT gmail.com)
+**Authors/Maintainers:** Renwang Huang (RenwangHuangX AT gmail.com)
 
-The *ublox_driver* provides essential functionalities for u-blox GNSS receivers. This package is originally designed for [u-blox ZED-F9P module](https://www.u-blox.com/en/product/zed-f9p-module) according to the specification [UBX-18010854](https://www.u-blox.com/en/docs/UBX-18010854), but should also be compatible to other 8-series or 9-series u-blox receivers as long as the interface is the same.
+The *ublox_driver_ros2* provides essential functionalities for u-blox GNSS receivers. We greatly appreciate the contributions from https://github.com/HKUST-Aerial-Robotics/ublox_driver, which have enabled us to develop and support navigation research for various u-blox products in the ROS environment, including applications in unmanned aerial vehicles (UAVs) and other robotic fields. However, with the advancement of technology, the original ROS driver package no longer provides support for the ROS 2 version. Building upon the foundation of Project A, we have further developed and optimized the u-blox driver to support ROS 2, enhancing and refining its related functionalities.
 
-The following diagram shows all possible input and output options supported by *ublox_driver*.
+The following diagram shows all possible input and output options supported by *ublox_driver_ros2*.
 
-![ublox_driver diagram!](/figures/ublox_driver_diagram.svg "ublox_driver_diagram")
+![ublox_driver diagram!](/doc/Project_figures/ublox_driver_diagram.svg "ublox_driver_diagram")
 
 ## 1. Prerequisites
 
 ### 1.1 C++11 Compiler
 This package requires some features of C++11.
 
-### 1.2 ROS
-This package is developed under [ROS Kinetic](http://wiki.ros.org/kinetic) environment.
+### 1.2 ROS2
+This package is developed under [ROS Foxy](http://wiki.ros.org/foxy) environment.
 
 ### 1.3 Eigen
 We use [Eigen 3.3.3](https://gitlab.com/libeigen/eigen/-/archive/3.3.3/eigen-3.3.3.zip) for matrix manipulation.
@@ -105,4 +105,3 @@ Many of the ephemeris parsing functions in our package are adapted from [RTKLIB]
 
 ## 8. License
 The source code is released under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html) license.
-
