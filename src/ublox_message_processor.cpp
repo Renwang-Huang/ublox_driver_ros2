@@ -1,34 +1,3 @@
-/**
-* This file is part of ublox-driver.
-*
-* Copyright (C) 2021 Aerial Robotics Group, Hong Kong University of Science and Technology
-* Author: CAO Shaozu (shaozu.cao@gmail.com)
-*
-* ublox-driver is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ublox-driver is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with ublox-driver. If not, see <http://www.gnu.org/licenses/>.
-*
-* As most of the ephemeris parsing functions are adapted from RTKLIB, 
-* the license for those functions is claimed as follows:
-* 
-* The RTKLIB software package is distributed under the following BSD 2-clause
-* license (http://opensource.org/licenses/BSD-2-Clause) and additional two
-* exclusive clauses. Users are permitted to develop, produce or sell their own
-* non-commercial or commercial products utilizing, linking or including RTKLIB as
-* long as they comply with the license.
-* 
-*         Copyright (c) 2007-2020, T. Takasu, All rights reserved.
-*/
-
 #include "ublox_message_processor.hpp"
 
 constexpr double UbloxMessageProcessor::lam_carr[];

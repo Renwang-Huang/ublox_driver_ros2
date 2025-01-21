@@ -49,3 +49,4 @@ install(TARGETS ${PROJECT_NAME} sync_system_time
 
 install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME})
+  

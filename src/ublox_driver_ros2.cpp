@@ -1,23 +1,4 @@
-/**
-* This file is part of ublox-driver.
-*
-* Copyright (C) 2021 Aerial Robotics Group, Hong Kong University of Science and Technology
-* Author: CAO Shaozu (shaozu.cao@gmail.com)
-*
-* ublox-driver is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ublox-driver is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with ublox-driver. If not, see <http://www.gnu.org/licenses/>.
-*/
-
+#include <iomanip>
 #include <vector>
 #include <string>
 #include <mutex>
@@ -26,9 +7,9 @@
 #include <stdlib.h>
 #include <time.h>
 // #include <sys/procmgr.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <ros/ros.h>
+// #include <unistd.h>
+// #include <arpa/inet.h>
+#include <rclcpp/rclcpp.h>
 
 #include "parameter_manager.hpp"
 #include "serial_handler.hpp"
@@ -39,28 +20,33 @@
 
 static std::atomic<bool> interrupted(false);
 
-// variables for receiver config at start
+int ack_flag = 0;
 std::mutex ack_m;
 std::condition_variable ack_cv;
-int ack_flag = 0;
 
+//设置中断程序
 void ctrl_c_handler(int s)
 {
     interrupted = true;
 }
 
+//获取系统时间
 std::string time_str()
 {
     std::stringstream ss;
     std::time_t time_ptr;
     time_ptr = time(NULL);
     tm *tm_local = localtime(&time_ptr);
-    ss << tm_local->tm_year + 1900 << '_' << tm_local->tm_mon + 1 << '_'
-       << tm_local->tm_mday << '_' << tm_local->tm_hour << '_' 
-       << tm_local->tm_min << '_' << tm_local->tm_sec;
+    ss << std::setw(4) << std::setfill('0') << tm_local->tm_year + 1900
+       << '_' << std::setw(2) << std::setfill('0') << tm_local->tm_mon + 1
+       << '_' << std::setw(2) << std::setfill('0') << tm_local->tm_mday
+       << '_' << std::setw(2) << std::setfill('0') << tm_local->tm_hour
+       << '_' << std::setw(2) << std::setfill('0') << tm_local->tm_min
+       << '_' << std::setw(2) << std::setfill('0') << tm_local->tm_sec;
     return ss.str();
 }
 
+//检查数据有效性
 void config_ack_callback(const uint8_t *data, size_t len)
 {
     int ack_result = UbloxMessageProcessor::check_ack(data, len);
@@ -72,6 +58,7 @@ void config_ack_callback(const uint8_t *data, size_t len)
     ack_cv.notify_one();
 }
 
+//确认串口数据接收正常
 bool config_receiver(std::shared_ptr<SerialHandler> serial, std::vector<RcvConfigRecord> &rcv_configs)
 {
     const uint32_t rcv_config_buff_capacity = 8192;
@@ -81,18 +68,20 @@ bool config_receiver(std::shared_ptr<SerialHandler> serial, std::vector<RcvConfi
     UbloxMessageProcessor::build_config_msg(rcv_configs, rcv_config_buff.get(), msg_len);
     std::unique_lock<std::mutex> ack_lk(ack_m);
     ack_flag = 0;
+
+    //绑定为串口回调函数
     serial->addCallback(std::bind(&config_ack_callback, 
         std::placeholders::_1, std::placeholders::_2));
     serial->writeRaw(rcv_config_buff.get(), msg_len);
     serial->startRead();
-    // block, wait ack
+
+    //阻塞程序运行直到串口接收到有效数据
     ack_cv.wait(ack_lk, []{return ack_flag != 0;});
     serial->stop_read();
     ack_lk.unlock();
-    // resume
+
     if (ack_flag == 1)
-        return true;
-    
+        return true;   
     return false;
 }
 
@@ -103,8 +92,8 @@ int main(int argc, char **argv)
 
     if (!interrupted.is_lock_free())  return 10;
 
-    ros::init(argc, argv, "ublox_driver");
-    ros::NodeHandle nh("~");
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<rclcpp::Node>("ublox_driver");
 
     struct sigaction sigIntHandler;
     sigIntHandler.sa_handler = ctrl_c_handler;
@@ -113,8 +102,25 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sigIntHandler, NULL);
     // procmgr_ability( 0, PROCMGR_AID_CLOCKSET );
 
+    /*
+    ROS1中的参数获取实现：
     std::string config_filepath;
     nh.getParam("config_file", config_filepath);
+    */
+
+    node->declare_parameter<std::string>("config_file", "default/config/path");
+    
+    std::string config_filepath;
+    if (node->get_parameter("config_file", config_filepath))
+    {
+        RCLCPP_INFO(node->get_logger(), "Config file: %s", config_filepath.c_str());
+    }
+    else
+    {
+        RCLCPP_ERROR(node->get_logger(), "Parameter 'config_file' not found!");
+        return 1;
+    }
+
     // config_filepath = argv[1];
     ParameterManager &pm(ParameterManager::getInstance());
     pm.read_parameter(config_filepath);
@@ -125,6 +131,8 @@ int main(int argc, char **argv)
     std::shared_ptr<FileDumper> file_dumper;
     std::shared_ptr<UbloxMessageProcessor> ublox_msg_processor;
     std::shared_ptr<SerialHandler> output_serial;
+
+    //依据输出形式初始化实例
     if (pm.to_ros)
         ublox_msg_processor.reset(new UbloxMessageProcessor(nh));
     if (pm.to_file)
@@ -138,14 +146,16 @@ int main(int argc, char **argv)
         output_serial.reset(new SerialHandler(pm.output_serial_port, pm.serial_baud_rate));
     }
     
+    //实时数据来源与离线数据来源对应的处理程序
     if (pm.online)
     {
         serial.reset(new SerialHandler(pm.input_serial_port, pm.serial_baud_rate));
-
+        
+        //该功能目前暂时不支持
         if (pm.config_receiver_at_start)
         {
             if (config_receiver(serial, pm.receiver_configs))
-                LOG(ERROR) << "Successfully configured the receiver.";
+                LOG(INFO) << "Successfully configured the receiver.";
             else
                 LOG(FATAL) << "Error occurs when configuring the receiver.";
         }
@@ -191,10 +201,10 @@ int main(int argc, char **argv)
         file_loader->startRead();
     }
 
-    ros::Rate loop(50);
-    while (ros::ok() && !interrupted)
+    rclcpp::Rate loop(50);
+    while (rclcpp::ok() && !interrupted)
     {
-        ros::spinOnce();
+        rclcpp::spin_some(node);
         loop.sleep();
     }
 
